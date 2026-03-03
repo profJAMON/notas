@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Calificaciones - Final Instalaciones</title>
+    <style>
+        :root { --blue: #1a3a5a; --gray: #f4f4f4; --red: #a83232; --gold: #d4af37; --green: #2e7d32; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--gray); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        .box { background: white; padding: 30px; border-radius: 8px; width: 450px; border-top: 8px solid var(--blue); box-shadow: 0 10px 30px rgba(0,0,0,0.15); position: relative; text-align: center; }
+        h2 { color: var(--blue); font-size: 1.3rem; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        p { font-size: 0.95rem; color: #444; line-height: 1.5; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; outline: none; box-sizing: border-box; }
+        input:focus { border-color: var(--blue); box-shadow: 0 0 5px rgba(26,58,90,0.2); }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { background: var(--blue); color: white; border: none; padding: 12px; cursor: pointer; font-weight: bold; width: 100%; border-radius: 4px; transition: 0.2s; }
+        button:hover { background: #122a42; transform: translateY(-1px); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .step { display: none; }
+        .step.active { display: block; }
+
+        .wheel-wrapper { position: relative; width: 240px; height: 240px; margin: 20px auto; }
+        .pointer { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); font-size: 48px; color: var(--red); z-index: 20; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); line-height: 1; }
+        #wheelCanvas { width: 240px; height: 240px; border-radius: 50%; box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+
+        .terms { height: 70px; overflow-y: scroll; border: 1px solid #eee; font-size: 11px; color: #888; padding: 10px; background: #fafafa; margin: 15px 0; text-align: left; }
+        #btn-no { background: var(--red); width: auto; position: absolute; z-index: 20; }
+        .bar-container { background: #eee; height: 24px; width: 100%; border-radius: 12px; margin: 15px 0; overflow: hidden; border: 1px solid #ddd; }
+        .bar-fill { background: linear-gradient(90deg, var(--red), #ff4d4d); height: 100%; width: 87%; }
+        
+        /* Iframe corregido */
+        #rickroll { position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; z-index: 99999; }
+    </style>
+</head>
+<body>
+
+<div class="box" id="main-box">
+    <div id="step1" class="step active">
+        <h2>Introduzca su Nombre y Apellidos</h2>
+        <input type="text" id="userName" placeholder="Nombre" required>
+        <input type="text" id="userSurname" placeholder="Apellidos">
+        <div class="terms">
+            AVISO LEGAL: Este acceso está monitorizado por el Departamento de Informática. <b>Este sistema es una simulación docente y no tiene validez legal.</b> El acceso implica la aceptación del protocolo de soborno ibérico. Se prohíbe terminantemente reclamar tras el veredicto.
+        </div>
+        <label style="font-size: 11px; cursor: pointer;"><input type="checkbox" id="checkTerms"> Acepto los términos y Condiciones</label>
+        <button onclick="saveName()">ACCEDER AL PORTAL</button>
+    </div>
+
+    <div id="step2" class="step">
+        <h2>¿Crees que tus compañeros han estudiado más que tú para esta asignatura?</h2>
+        <div class="btn-group">
+            <button onclick="nextWithMsg('step3', 'Todos sabemos que no habéis estudiado nada.')">SÍ</button>
+            <button onclick="nextWithMsg('step3', 'Interesante... el sistema ha detectado que el 78% de la clase cree ser el único que ha estudiado.')">NO</button>
+        </div>
+    </div>
+
+    <div id="step3" class="step">
+        <h2>¿Crees que mereces aprobar la asignatura?</h2>
+        <div class="btn-group">
+            <button onclick="confirmPoll('SI')">SÍ</button>
+            <button onclick="confirmPoll('NO')">NO</button>
+        </div>
+        <div id="poll-result" style="display:none; margin-top:20px;">
+            <p style="font-size: 0.8rem; color: #666; font-style: italic;">"Voto registrado y añadido a la encuesta anónima entre profesores y alumnos."</p>
+            <p>Resultado acumulado para: <b><span class="student-name"></span></b></p>
+            <div class="bar-container"><div class="bar-fill"></div></div>
+            <p style="text-align:right; font-weight:bold; color:var(--red); margin: 0; line-height: 1.4;">
+                · 87.4% NO CREE QUE MEREZCAS APROBAR <br>
+                <span id="si-vote-text">· 12.6% SÍ CREE QUE MERECES APROBAR</span>
+            </p>
+            <button onclick="nextStep(4)" style="margin-top:15px;">ACEPTAR RESULTADO</button>
+        </div>
+    </div>
+
+    <div id="step4" class="step">
+        <h2>El sistema te ofrece un <b>Aprobado Automático</b>... pero a cambio suspenderá a un compañero al azar. ¿Aceptas?</h2>
+        <div class="btn-group">
+            <button onclick="nextWithMsg('step5', 'Gracias por tu honestidad. Eres una persona horrible.')">ACEPTO</button>
+            <button onclick="nextWithMsg('step5', 'Noble, pero el sistema ya ha decidido suspender a otro por ti.')">NO ACEPTO</button>
+        </div>
+    </div>
+
+    <div id="step5" class="step">
+        <h2>Sistema de cálculo de nota final</h2>
+        <div class="wheel-wrapper">
+            <div class="pointer">▼</div>
+            <canvas id="wheelCanvas" width="240" height="240"></canvas>
+        </div>
+        <button id="spin-btn" onclick="spinWheel()">Aprieta para realizar cálculo <br>ÚLTRACOMPLEJO</button>
+        <p id="wheel-msg" style="display:none; margin-top: 10px;"></p>
+        <button id="next-from-wheel" style="display:none;" onclick="nextStep(6)">Intentar el "Plan B"</button>
+    </div>
+
+    <div id="step6" class="step">
+        <h2>Plan B</h2>
+        <p>Se ha detectado una vulnerabilidad. ¿Quieres solicitar la beca de colaboración <b>"Jamón 5 Jotas"</b> para el profesor?</p>
+        <div style="height: 100px; position: relative; margin-top:20px;">
+            <button onclick="finalLoading()" style="width:140px; position:absolute; left:20px;">Solicitar beca</button>
+            <button id="btn-no" onmouseover="moveButton()" style="left:200px; top:20px;">NO</button>
+        </div>
+    </div>
+
+    <div id="step8" class="step">
+        <h2>Sincronizando con Ministerio</h2>
+        <div class="bar-container" style="background:#eee;"><div id="final-bar" style="background:var(--green); width:0%; height:100%;"></div></div>
+        <p id="loading-msg" style="font-style:italic; font-size:12px; color:#666;">Iniciando protocolo de volcado...</p>
+    </div>
+</div>
+
+<iframe id="rickroll" src="" allow="autoplay; encrypted-media"></iframe>
+
+<script>
+let name = "";
+function nextStep(s) {
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+    document.getElementById('step' + s).classList.add('active');
+    if (s === 5) initWheel();
+}
+
+function saveName() {
+    const input = document.getElementById('userName');
+    const surname = document.getElementById('userSurname');
+    const check = document.getElementById('checkTerms');
+    if (input.value.trim().length < 3) { alert("Por favor, introduce tu nombre."); return; }
+    name = input.value.trim() + " " + (surname.value.trim() || "");
+    document.querySelectorAll('.student-name').forEach(el => el.innerText = name);
+    nextStep(2);
+}
+
+function nextWithMsg(s, msg) {
+    alert(msg);
+    nextStep(s.replace('step', ''));
+}
+
+function confirmPoll(voto) {
+    const siLabel = document.getElementById('si-vote-text');
+    siLabel.innerHTML = voto === 'SI'
+        ? '· 12.6% SÍ CREE QUE MERECES APROBAR <br><small>(básicamente solo te has votado tú)</small>'
+        : '· 12.6% SÍ CREE QUE MERECES APROBAR';
+    document.getElementById('poll-result').style.display = 'block';
+}
+
+const wheelOptions = [
+    { text: "APROBADO", color: "#2e7d32", result: "APROBADO... ¡Enhorabuena!", pct: 0.10 },
+    { text: "SUSPENSO", color: "#e74c3c", result: "SUSPENSO.", pct: 0.90 }
+];
+
+let currentRotation = 0; 
+
+function initWheel() {
+    currentRotation = 0;
+    drawWheel(0);
+}
+
+function drawWheel(angleDeg) {
+    const canvas = document.getElementById('wheelCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const r  = cx - 4;
+    const baseOffset = -Math.PI / 2;
+    const rotOffset  = (angleDeg * Math.PI) / 180;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let cumulative = 0;
+    wheelOptions.forEach((opt, i) => {
+        const sliceAngle = opt.pct * 2 * Math.PI;
+        const start = baseOffset + rotOffset + cumulative;
+        const end   = start + sliceAngle;
+        cumulative += sliceAngle;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, start, end);
+        ctx.closePath();
+        ctx.fillStyle = opt.color;
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(start + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 16px Segoe UI, sans-serif';
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(opt.text, r - 10, 6);
+        ctx.restore();
+    });
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10, 0, 2 * Math.PI);
+    ctx.fillStyle = '#333';
+    ctx.fill();
+}
+
+function spinWheel() {
+    const spinBtn = document.getElementById('spin-btn');
+    const msg = document.getElementById('wheel-msg');
+    const nextBtn = document.getElementById('next-from-wheel');
+    if (spinBtn.disabled) return;
+
+    spinBtn.disabled = true;
+    msg.style.display = 'none';
+
+    const extraTurns = 5;
+    const targetAngle = 180;
+    const totalDeg = 360 * extraTurns + targetAngle;
+
+    const duration = 5000;
+    const start = performance.now();
+
+    function animate(now) {
+        const elapsed = now - start;
+        const t = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - t, 3);
+        const angle = totalDeg * easeOut;
+        drawWheel(angle);
+
+        if (t < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            msg.innerHTML = `RESULTADO: <span style="color:#e74c3c; font-weight:bold;">SUSPENSO.</span>`;
+            msg.style.display = 'block';
+            nextBtn.style.display = 'block';
+            spinBtn.style.display = 'none';
+        }
+    }
+    requestAnimationFrame(animate);
+}
+
+function moveButton() {
+    const btn = document.getElementById('btn-no');
+    const box = document.getElementById('main-box');
+    const maxX = box.clientWidth - btn.clientWidth - 20;
+    btn.style.left = Math.random() * maxX + "px";
+    btn.style.top = Math.random() * 80 + "px";
+}
+
+function finalLoading() {
+    nextStep(8);
+    let w = 0;
+    const bar = document.getElementById('final-bar');
+    const msg = document.getElementById('loading-msg');
+    const texts = ["Firmando acta...", "Validando soborno...", "Generando PDF...", "Sincronizando...", "99% - Casi listo..."];
+    const int = setInterval(() => {
+        w++;
+        bar.style.width = w + "%";
+        if (w % 20 === 0) msg.innerText = texts[Math.floor(w / 20)];
+        if (w === 99) {
+            clearInterval(int);
+            setTimeout(() => {
+                const video = document.getElementById('rickroll');
+                video.src = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&controls=0&mute=0&loop=1&playlist=dQw4w9WgXcQ";
+                video.style.display = 'block';
+            }, 2000);
+        }
+    }, 70);
+}
+document.oncontextmenu = function() { return false; };
+
+// Bloquear teclas de atajo (F12, Ctrl+Shift+I, etc.)
+document.onkeydown = function(e) {
+    if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74))) {
+        return false;
+    }
+</script>
+</body>
+</html>
